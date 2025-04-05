@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History - Weather App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#4361ee',secondary:'#3f37c9'},borderRadius:{'button':'8px'}}}}</script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+    <div class="max-w-[375px] md:max-w-[768px] lg:max-w-[1024px] xl:max-w-[2280px] mx-auto relative min-h-screen">
+        <!-- Nav Bar -->
+        <nav class="fixed top-0 w-full bg-primary text-white shadow-md z-10">
+            <div class="flex items-center justify-between px-4 py-3 md:px-6 lg:px-8">
+                <h1 class="text-xl md:text-2xl lg:text-3xl font-['Pacifico']">History</h1>
+                <button onclick="goBack()" class="text-white text-sm md:text-base flex items-center space-x-1">
+                    <i class="ri-arrow-left-line ri-lg"></i>
+                    <span>Back</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="pt-16 pb-20 px-4 md:px-6 lg:px-8">
+            <!-- Search History -->
+            <div>
+                <h3 class="text-lg md:text-xl font-semibold mb-3">Search History</h3>
+                <div id="historyContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- History cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Clear History Button -->
+            <div class="mt-6 flex justify-center">
+                <button id="clearHistoryButton" class="px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600">
+                    <i class="ri-delete-bin-line ri-lg"></i> Clear History
+                </button>
+            </div>
+        </main>
+
+        <!-- Tab Bar -->
+        <div class="fixed bottom-0 w-full bg-white border-t border-gray-200 shadow-lg z-10">
+            <div class="grid grid-cols-4 h-16">
+                <a href="index.html" class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-gray-500">
+                    <i class="ri-home-line ri-lg"></i>
+                    <span class="text-xs">Home</span>
+                </a>
+                <a href="location.html" class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-gray-500">
+                    <i class="ri-map-pin-line ri-lg"></i>
+                    <span class="text-xs">Locations</span>
+                </a>
+                <a href="history.html" class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-primary">
+                    <i class="ri-history-line ri-lg"></i>
+                    <span class="text-xs">History</span>
+                </a>
+                <a href="settings.html" class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-gray-500">
+                    <i class="ri-settings-line ri-lg"></i>
+                    <span class="text-xs">Settings</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const historyContainer = document.getElementById('historyContainer');
+        const clearHistoryButton = document.getElementById('clearHistoryButton');
+
+        // Load search history from localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSearchHistory();
+
+            // Event listener for clearing history
+            clearHistoryButton.addEventListener('click', clearSearchHistory);
+        });
+
+        // Load search history
+        function loadSearchHistory() {
+            const searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            historyContainer.innerHTML = '';
+
+            if (searchHistory.length === 0) {
+                historyContainer.innerHTML = '<p class="text-gray-500 text-center">No search history available.</p>';
+                return;
+            }
+
+            searchHistory.forEach(entry => {
+                const historyCard = document.createElement('div');
+                historyCard.className = 'bg-white rounded-lg shadow-md p-4 flex justify-between items-center cursor-pointer';
+                historyCard.innerHTML = `
+                    <div>
+                        <h4 class="text-lg font-semibold">${entry.city}</h4>
+                        <p class="text-sm text-gray-500">${entry.date}</p>
+                    </div>
+                `;
+
+                // Add click event to redirect to index.html with the selected city
+                historyCard.addEventListener('click', () => {
+                    localStorage.setItem('selectedCity', entry.city); // Save the selected city to localStorage
+                    window.location.href = 'index.html'; // Redirect to index.html
+                });
+
+                historyContainer.appendChild(historyCard);
+            });
+        }
+
+        // Clear search history
+        function clearSearchHistory() {
+            if (confirm('Are you sure you want to clear your search history?')) {
+                localStorage.removeItem('searchHistory');
+                loadSearchHistory();
+            }
+        }
+
+        // Go back to the previous page
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

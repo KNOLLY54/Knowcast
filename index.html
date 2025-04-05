@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#4361ee',secondary:'#3f37c9'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        
+        .weather-bg-sunny {
+            background: linear-gradient(to bottom, #4361ee, #72ddf7);
+        }
+        
+        .weather-bg-cloudy {
+            background: linear-gradient(to bottom, #7b8ab8, #c9d6ff);
+        }
+        
+        .weather-bg-rainy {
+            background: linear-gradient(to bottom, #546bab, #7e8ba3);
+        }
+        
+        .weather-bg-night {
+            background: linear-gradient(to bottom, #0f2447, #2c3e67);
+        }
+        
+        .forecast-card {
+            transition: transform 0.3s ease;
+        }
+        
+        .forecast-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+    <div class="max-w-[375px] md:max-w-[768px] lg:max-w-[1024px] xl:max-w-[2280px] mx-auto relative min-h-screen">
+        <!-- Nav Bar -->
+        <nav class="fixed top-0 w-full bg-primary text-white shadow-md z-10">
+            <div class="flex items-center justify-between px-4 py-3 md:px-6 lg:px-8">
+                <h1 class="text-xl md:text-2xl lg:text-3xl font-['Pacifico']">KnowCast</h1>
+                <div class="flex items-center space-x-3">
+                    <button id="unitToggle" class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-white/20 text-white cursor-pointer">
+                        <span class="text-sm md:text-base">°C</span>
+                    </button>
+                    <button id="darkModeToggle" class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-white/20 text-white cursor-pointer">
+                        <i class="ri-sun-line ri-lg md:ri-xl"></i>
+                    </button>
+                    <button id="refreshButton" class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-white/20 text-white cursor-pointer">
+                        <i class="ri-refresh-line ri-lg md:ri-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="pt-16 pb-20 px-4 md:px-6 lg:px-8">
+            <!-- Search Section -->
+            <div class="mt-4 mb-6">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <i class="ri-search-line ri-lg text-gray-400"></i>
+                    </div>
+                    <input type="text" id="searchInput" class="block w-full p-3 pl-10 pr-16 text-sm md:text-base rounded-lg border-none bg-white shadow-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Enter city name">
+                    <button id="searchButton" class="absolute right-0 top-0 h-full px-4 bg-primary text-white rounded-r-button cursor-pointer">
+                        <i class="ri-search-line ri-lg"></i>
+                    </button>
+                </div>
+                <div class="flex justify-center mt-3">
+                    <button id="locationButton" class="flex items-center text-sm md:text-base text-primary cursor-pointer">
+                        <i class="ri-map-pin-line ri-lg mr-1"></i>
+                        <span>Use my current location</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Weather Display -->
+            <div id="weatherContainer" class="hidden fade-in">
+                <div id="currentWeather" class="rounded-lg overflow-hidden shadow-lg mb-6">
+                    <div class="weather-bg-sunny p-6 text-white">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h2 id="cityName" class="text-2xl md:text-3xl font-semibold">London</h2>
+                                <p id="currentDate" class="text-sm md:text-base opacity-90">Friday, April 4, 2025</p>
+                            </div>
+                            <div id="weatherIcon" class="w-16 h-16 md:w-20 md:h-20 flex items-center justify-center">
+                                <i class="ri-sun-line ri-3x md:ri-4x"></i>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex items-end">
+                            <h1 id="temperature" class="text-5xl md:text-6xl font-bold">21°</h1>
+                            <p id="weatherDescription" class="ml-2 mb-1 capitalize text-sm md:text-base">Clear Sky</p>
+                        </div>
+                        
+                        <div class="mt-6 grid grid-cols-2 gap-4">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-white/20 mr-2">
+                                    <i class="ri-temp-hot-line ri-lg md:ri-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs md:text-sm opacity-80">Feels Like</p>
+                                    <p id="feelsLike" class="font-medium text-sm md:text-base">23°</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-white/20 mr-2">
+                                    <i class="ri-water-percent-line ri-lg md:ri-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs md:text-sm opacity-80">Humidity</p>
+                                    <p id="humidity" class="font-medium text-sm md:text-base">48%</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-white/20 mr-2">
+                                    <i class="ri-windy-line ri-lg md:ri-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs md:text-sm opacity-80">Wind</p>
+                                    <p id="windSpeed" class="font-medium text-sm md:text-base">12 km/h</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full bg-white/20 mr-2">
+                                    <i class="ri-dashboard-3-line ri-lg md:ri-xl"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs md:text-sm opacity-80">Pressure</p>
+                                    <p id="pressure" class="font-medium text-sm md:text-base">1015 hPa</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-center">
+                    <button id="saveLocationButton" class="px-4 py-2 bg-primary text-white rounded-lg shadow-md hover:bg-primary/90">
+                        <i class="ri-save-line ri-lg"></i> Save Location
+                    </button>
+                </div>
+
+                <!-- 5-Day Forecast -->
+                <div>
+                    <h3 class="text-lg md:text-xl font-semibold mb-3">5-Day Forecast</h3>
+                    <div id="forecastContainer" class="overflow-x-auto pb-2">
+                        <div class="flex space-x-3 min-w-max">
+                            <!-- Forecast cards will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loadingSpinner" class="hidden flex justify-center items-center my-16">
+                <div class="loading-spinner"></div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="errorMessage" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded my-6 fade-in">
+                <div class="flex">
+                    <div class="w-6 h-6 flex items-center justify-center mr-2">
+                        <i class="ri-error-warning-line ri-lg"></i>
+                    </div>
+                    <p id="errorText">City not found. Please try again.</p>
+                </div>
+            </div>
+
+            <!-- Welcome Message -->
+            <div id="welcomeMessage" class="text-center my-16">
+                <div class="w-16 h-16 flex items-center justify-center mx-auto mb-4 bg-primary/10 rounded-full text-primary">
+                    <i class="ri-cloud-line ri-3x"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Welcome to Weather App</h3>
+                <p class="text-gray-600 mb-4">Search for a city or use your current location to get the latest weather information</p>
+                <div class="flex justify-center space-x-4">
+                    <button id="exampleCity1" class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer">London</button>
+                    <button id="exampleCity2" class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer">New York</button>
+                    <button id="exampleCity3" class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer">Tokyo</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Tab Bar -->
+        <div class="fixed bottom-0 w-full bg-white border-t border-gray-200 shadow-lg z-10">
+            <div class="grid grid-cols-4 h-16">
+                <button class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-primary">
+                 <a href="index.html"><i class="ri-home-line ri-lg"></i></a>   
+                    <a href="index.html"><span class="text-xs">Home</span></a>
+                </button>
+                <button class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-gray-500">
+                   <a href="location.html"><i class="ri-map-pin-line ri-lg"></i></a> 
+                   <a href="location.html"><span class="text-xs">Locations</span></a> 
+                </button>
+                <button class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-gray-500">
+                    <a href="history.html"><i class="ri-history-line ri-lg"></i></a>
+                   <a href="history.html"><span class="text-xs">History</span></a> 
+                </button>
+                <button class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-gray-500">
+                    <a href="settings.html"><i class="ri-settings-line ri-lg"></i></a>
+                    <a href="settings.html"><span class="text-xs">Settings</span></a>
+                </button>
+            </div>
+        </div>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300 pointer-events-none">
+            <p id="toastMessage">Message here</p>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        const API_KEY = 'abdfd4be4c35e2bf4ac1c0b03ffa716b'; // Replace with your API key
+        let currentUnit = 'metric'; // 'metric' for Celsius, 'imperial' for Fahrenheit
+        let darkMode = false;
+        
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const searchButton = document.getElementById('searchButton');
+        const locationButton = document.getElementById('locationButton');
+        const unitToggle = document.getElementById('unitToggle');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const weatherContainer = document.getElementById('weatherContainer');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        const forecastContainer = document.getElementById('forecastContainer').querySelector('div');
+        const exampleCity1 = document.getElementById('exampleCity1');
+        const exampleCity2 = document.getElementById('exampleCity2');
+        const exampleCity3 = document.getElementById('exampleCity3');
+        const refreshButton = document.getElementById('refreshButton');
+        const saveLocationButton = document.getElementById('saveLocationButton');
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check for a selected city from history
+            const selectedCity = localStorage.getItem('selectedCity');
+            if (selectedCity) {
+                searchInput.value = selectedCity; // Set the search input to the selected city
+                fetchWeatherData(selectedCity); // Fetch weather data for the selected city
+                localStorage.removeItem('selectedCity'); // Clear the selected city from localStorage
+            }
+
+            // Check for saved city in localStorage
+            const savedCity = localStorage.getItem('lastCity');
+            if (!selectedCity && savedCity) {
+                searchInput.value = savedCity;
+                fetchWeatherData(savedCity);
+            }
+
+            // Check for saved unit preference
+            const savedUnit = localStorage.getItem('unit');
+            if (savedUnit) {
+                currentUnit = savedUnit;
+                updateUnitDisplay();
+            }
+
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('darkMode');
+            if (savedTheme === 'true') {
+                darkMode = true;
+                updateTheme();
+            }
+
+            // Event listeners
+            searchButton.addEventListener('click', handleSearch);
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleSearch();
+            });
+            locationButton.addEventListener('click', getCurrentLocation);
+            unitToggle.addEventListener('click', toggleUnit);
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+            refreshButton.addEventListener('click', resetPage);
+            saveLocationButton.addEventListener('click', saveCurrentLocation);
+
+            // Example city buttons
+            exampleCity1.addEventListener('click', () => {
+                searchInput.value = exampleCity1.textContent;
+                handleSearch();
+            });
+            exampleCity2.addEventListener('click', () => {
+                searchInput.value = exampleCity2.textContent;
+                handleSearch();
+            });
+            exampleCity3.addEventListener('click', () => {
+                searchInput.value = exampleCity3.textContent;
+                handleSearch();
+            });
+        });
+        
+        // Handle search
+        function handleSearch() {
+            const city = searchInput.value.trim();
+            if (city) {
+                saveSearchHistory(city); // Save the search term to history
+                fetchWeatherData(city);
+            } else {
+                showError('Please enter a city name');
+            }
+        }
+        
+        // Save search term to localStorage
+        function saveSearchHistory(city) {
+            const searchHistory = JSON.parse(localStorage.getItem('searchHistory')) || [];
+            const timestamp = new Date().toLocaleString(); // Get the current date and time
+        
+            // Add the new search term to the history
+            searchHistory.unshift({ city, date: timestamp });
+        
+            // Limit the history to the last 10 searches
+            if (searchHistory.length > 10) {
+                searchHistory.pop();
+            }
+        
+            // Save the updated history back to localStorage
+            localStorage.setItem('searchHistory', JSON.stringify(searchHistory));
+        }
+        
+        // Get current location
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                showLoading();
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        fetchWeatherByCoords(lat, lon);
+                    },
+                    (error) => {
+                        hideLoading();
+                        showError('Unable to retrieve your location');
+                        console.error(error);
+                    }
+                );
+            } else {
+                showError('Geolocation is not supported by your browser');
+            }
+        }
+        
+        // Fetch weather data by city name
+        function fetchWeatherData(city) {
+            showLoading();
+            hideError();
+            
+            // Save to localStorage
+            localStorage.setItem('lastCity', city);
+            
+            // Fetch current weather
+            fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${API_KEY}&units=${currentUnit}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('City not found');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    updateCurrentWeather(data);
+                    
+                    // Fetch 5-day forecast
+                    return fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${API_KEY}&units=${currentUnit}`);
+                })
+                .then(response => response.json())
+                .then(data => {
+                    updateForecast(data);
+                    hideLoading();
+                    showWeather();
+                })
+                .catch(error => {
+                    hideLoading();
+                    showError(error.message);
+                    console.error('Error:', error);
+                });
+        }
+        
+        // Fetch weather data by coordinates
+        function fetchWeatherByCoords(lat, lon) {
+            // Fetch current weather
+            fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=${currentUnit}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Unable to fetch weather data');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    updateCurrentWeather(data);
+                    
+                    // Save city to localStorage
+                    localStorage.setItem('lastCity', data.name);
+                    searchInput.value = data.name;
+                    
+                    // Fetch 5-day forecast
+                    return fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=${currentUnit}`);
+                })
+                .then(response => response.json())
+                .then(data => {
+                    updateForecast(data);
+                    hideLoading();
+                    showWeather();
+                })
+                .catch(error => {
+                    hideLoading();
+                    showError(error.message);
+                    console.error('Error:', error);
+                });
+        }
+        
+        // Update current weather display
+        function updateCurrentWeather(data) {
+            // Update city and date
+            document.getElementById('cityName').textContent = `${data.name}, ${data.sys.country}`;
+            document.getElementById('currentDate').textContent = formatDate(new Date());
+            
+            // Update temperature and description
+            document.getElementById('temperature').textContent = `${Math.round(data.main.temp)}°`;
+            document.getElementById('weatherDescription').textContent = data.weather[0].description;
+            
+            // Update details
+            document.getElementById('feelsLike').textContent = `${Math.round(data.main.feels_like)}°`;
+            document.getElementById('humidity').textContent = `${data.main.humidity}%`;
+            document.getElementById('windSpeed').textContent = currentUnit === 'metric' ? 
+                `${Math.round(data.wind.speed * 3.6)} km/h` : 
+                `${Math.round(data.wind.speed)} mph`;
+            document.getElementById('pressure').textContent = `${data.main.pressure} hPa`;
+            
+            // Update weather icon
+            updateWeatherIcon(data.weather[0].id, data.weather[0].icon);
+            
+            // Update background based on weather
+            updateWeatherBackground(data.weather[0].id, data.weather[0].icon);
+        }
+        
+        // Update forecast display
+        function updateForecast(data) {
+            forecastContainer.innerHTML = '';
+            
+            // Get forecast for next 5 days (at 12:00)
+            const forecastData = data.list.filter(item => item.dt_txt.includes('12:00:00'));
+            
+            // Limit to 5 days
+            const fiveDayForecast = forecastData.slice(0, 5);
+            
+            fiveDayForecast.forEach(day => {
+                const date = new Date(day.dt * 1000);
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const temp = Math.round(day.main.temp);
+                const weatherId = day.weather[0].id;
+                const iconCode = day.weather[0].icon;
+                const description = day.weather[0].description;
+                
+                const forecastCard = document.createElement('div');
+                forecastCard.className = 'forecast-card bg-white rounded-lg shadow-md p-4 w-24';
+                
+                forecastCard.innerHTML = `
+                    <p class="text-center font-medium text-sm">${dayName}</p>
+                    <div class="w-10 h-10 mx-auto my-2 flex items-center justify-center">
+                        ${getWeatherIconHTML(weatherId, iconCode)}
+                    </div>
+                    <p class="text-center font-bold">${temp}°</p>
+                    <p class="text-center text-xs text-gray-500 truncate">${description}</p>
+                `;
+                
+                forecastContainer.appendChild(forecastCard);
+            });
+        }
+        
+        // Update weather icon
+        function updateWeatherIcon(weatherId, iconCode) {
+            const iconContainer = document.getElementById('weatherIcon');
+            iconContainer.innerHTML = getWeatherIconHTML(weatherId, iconCode);
+        }
+        
+        // Get weather icon HTML
+        function getWeatherIconHTML(weatherId, iconCode) {
+            // Check if it's day or night
+            const isDay = iconCode.includes('d');
+            
+            // Map weather codes to Remix icons
+            let iconClass = '';
+            
+            if (weatherId >= 200 && weatherId < 300) {
+                // Thunderstorm
+                iconClass = 'ri-thunderstorms-line';
+            } else if (weatherId >= 300 && weatherId < 400) {
+                // Drizzle
+                iconClass = 'ri-drizzle-line';
+            } else if (weatherId >= 500 && weatherId < 600) {
+                // Rain
+                iconClass = 'ri-rainy-line';
+            } else if (weatherId >= 600 && weatherId < 700) {
+                // Snow
+                iconClass = 'ri-snowy-line';
+            } else if (weatherId >= 700 && weatherId < 800) {
+                // Atmosphere (fog, mist, etc.)
+                iconClass = 'ri-mist-line';
+            } else if (weatherId === 800) {
+                // Clear sky
+                iconClass = isDay ? 'ri-sun-line' : 'ri-moon-clear-line';
+            } else if (weatherId > 800) {
+                // Clouds
+                if (weatherId === 801) {
+                    // Few clouds
+                    iconClass = isDay ? 'ri-sun-cloudy-line' : 'ri-moon-cloudy-line';
+                } else {
+                    // More clouds
+                    iconClass = 'ri-cloudy-line';
+                }
+            }
+            
+            return `<i class="${iconClass} ri-3x"></i>`;
+        }
+        
+        // Update weather background
+        function updateWeatherBackground(weatherId, iconCode) {
+            const weatherCard = document.getElementById('currentWeather').querySelector('div');
+            
+            // Check if it's day or night
+            const isDay = iconCode.includes('d');
+            
+            // Remove all weather background classes
+            weatherCard.classList.remove('weather-bg-sunny', 'weather-bg-cloudy', 'weather-bg-rainy', 'weather-bg-night');
+            
+            // Add appropriate class based on weather condition
+            if (!isDay) {
+                weatherCard.classList.add('weather-bg-night');
+            } else if (weatherId >= 200 && weatherId < 600) {
+                // Rain and thunderstorms
+                weatherCard.classList.add('weather-bg-rainy');
+            } else if (weatherId >= 600 && weatherId < 700) {
+                // Snow
+                weatherCard.classList.add('weather-bg-cloudy');
+            } else if (weatherId === 800) {
+                // Clear sky
+                weatherCard.classList.add('weather-bg-sunny');
+            } else {
+                // Clouds and other conditions
+                weatherCard.classList.add('weather-bg-cloudy');
+            }
+        }
+        
+        // Format date
+        function formatDate(date) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+        
+        // Toggle temperature unit
+        function toggleUnit() {
+            currentUnit = currentUnit === 'metric' ? 'imperial' : 'metric';
+            
+            // Save preference
+            localStorage.setItem('unit', currentUnit);
+            
+            // Update display
+            updateUnitDisplay();
+            
+            // Refetch weather with new unit
+            const city = document.getElementById('cityName').textContent.split(',')[0];
+            if (city) {
+                fetchWeatherData(city);
+            }
+            
+            // Show toast
+            showToast(`Changed to ${currentUnit === 'metric' ? 'Celsius' : 'Fahrenheit'}`);
+        }
+        
+        // Update unit display
+        function updateUnitDisplay() {
+            unitToggle.querySelector('span').textContent = currentUnit === 'metric' ? '°C' : '°F';
+        }
+        
+        // Toggle dark mode
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            
+            // Save preference
+            localStorage.setItem('darkMode', darkMode.toString());
+            
+            // Update theme
+            updateTheme();
+            
+            // Show toast
+            showToast(`${darkMode ? 'Dark' : 'Light'} mode enabled`);
+        }
+        
+        // Update theme
+        function updateTheme() {
+            const body = document.body;
+            const darkModeIcon = darkModeToggle.querySelector('i');
+            
+            if (darkMode) {
+                body.classList.add('bg-gray-900', 'text-white');
+                body.classList.remove('bg-gray-50', 'text-gray-800');
+                darkModeIcon.className = 'ri-moon-line ri-lg';
+                
+                // Update other elements
+                document.querySelectorAll('.bg-white').forEach(el => {
+                    el.classList.remove('bg-white');
+                    el.classList.add('bg-gray-800');
+                });
+                
+                document.querySelectorAll('.text-gray-500, .text-gray-600').forEach(el => {
+                    el.classList.remove('text-gray-500', 'text-gray-600');
+                    el.classList.add('text-gray-400');
+                });
+                
+                // Update tab bar
+                const tabBar = document.querySelector('.fixed.bottom-0');
+                tabBar.classList.remove('bg-white', 'border-gray-200');
+                tabBar.classList.add('bg-gray-800', 'border-gray-700');
+            } else {
+                body.classList.remove('bg-gray-900', 'text-white');
+                body.classList.add('bg-gray-50', 'text-gray-800');
+                darkModeIcon.className = 'ri-sun-line ri-lg';
+                
+                // Update other elements
+                document.querySelectorAll('.bg-gray-800').forEach(el => {
+                    el.classList.remove('bg-gray-800');
+                    el.classList.add('bg-white');
+                });
+                
+                document.querySelectorAll('.text-gray-400').forEach(el => {
+                    el.classList.remove('text-gray-400');
+                    el.classList.add('text-gray-500');
+                });
+                
+                // Update tab bar
+                const tabBar = document.querySelector('.fixed.bottom-0');
+                tabBar.classList.remove('bg-gray-800', 'border-gray-700');
+                tabBar.classList.add('bg-white', 'border-gray-200');
+            }
+        }
+        
+        // Show loading spinner
+        function showLoading() {
+            loadingSpinner.classList.remove('hidden');
+            weatherContainer.classList.add('hidden');
+            welcomeMessage.classList.add('hidden');
+        }
+        
+        // Hide loading spinner
+        function hideLoading() {
+            loadingSpinner.classList.add('hidden');
+        }
+        
+        // Show weather container
+        function showWeather() {
+            weatherContainer.classList.remove('hidden');
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.remove('hidden');
+            weatherContainer.classList.add('hidden');
+        }
+        
+        // Hide error message
+        function hideError() {
+            errorMessage.classList.add('hidden');
+        }
+        
+        // Show toast notification
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        // Reset the page to its original state
+        function resetPage() {
+            // Clear the search input
+            searchInput.value = '';
+
+            // Hide the weather container and error message
+            weatherContainer.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+
+            // Show the welcome message
+            welcomeMessage.classList.remove('hidden');
+
+            // Clear the last searched city from localStorage
+            localStorage.removeItem('lastCity');
+
+            // Optionally, show a toast notification
+            showToast('Page reset to its original state');
+        }
+
+        // Save the current location to localStorage
+        function saveCurrentLocation() {
+            const cityName = document.getElementById('cityName').textContent;
+            const country = cityName.split(', ')[1]; // Extract the country from the city name
+            const location = { name: cityName, country };
+
+            // Get existing saved locations from localStorage
+            const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+
+            // Check if the location is already saved
+            const isAlreadySaved = savedLocations.some(loc => loc.name === location.name);
+            if (isAlreadySaved) {
+                showToast('Location is already saved.');
+                return;
+            }
+
+            // Add the new location to the saved locations
+            savedLocations.push(location);
+
+            // Save the updated locations back to localStorage
+            localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+
+            // Show a toast notification
+            showToast('Location saved successfully.');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Locations - Weather App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#4361ee',secondary:'#3f37c9'},borderRadius:{'button':'8px'}}}}</script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+    <div class="max-w-[375px] md:max-w-[768px] lg:max-w-[1024px] xl:max-w-[2280px] mx-auto relative min-h-screen">
+        <!-- Nav Bar -->
+        <nav class="fixed top-0 w-full bg-primary text-white shadow-md z-10">
+            <div class="flex items-center justify-between px-4 py-3 md:px-6 lg:px-8">
+                <h1 class="text-xl md:text-2xl lg:text-3xl font-['Pacifico']">Locations</h1>
+                <button onclick="goBack()" class="text-white text-sm md:text-base flex items-center space-x-1">
+                    <i class="ri-arrow-left-line ri-lg"></i>
+                    <span>Back</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="pt-16 pb-20 px-4 md:px-6 lg:px-8">
+            <!-- Search Section -->
+            <div class="mt-4 mb-6">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <i class="ri-search-line ri-lg text-gray-400"></i>
+                    </div>
+                    <input type="text" id="locationSearchInput" class="block w-full p-3 pl-10 pr-16 text-sm md:text-base rounded-lg border-none bg-white shadow-md focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Search for a location">
+                    <button id="locationSearchButton" class="absolute right-0 top-0 h-full px-4 bg-primary text-white rounded-r-button cursor-pointer">
+                        <i class="ri-search-line ri-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Saved Locations -->
+            <div>
+                <h3 class="text-lg md:text-xl font-semibold mb-3">Saved Locations</h3>
+                <div id="savedLocationsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Saved location cards will be dynamically inserted here -->
+                </div>
+            </div>
+
+            <!-- Add Location Button -->
+            <div class="mt-6 flex justify-center">
+                <button id="addLocationButton" class="px-4 py-2 bg-primary text-white rounded-lg shadow-md hover:bg-primary/90">
+                    <i class="ri-add-line ri-lg"></i> Add Current Location
+                </button>
+            </div>
+        </main>
+
+        <!-- Tab Bar -->
+        <div class="fixed bottom-0 w-full bg-white border-t border-gray-200 shadow-lg z-10">
+            <div class="grid grid-cols-4 h-16">
+                <a href="index.html" class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-gray-500">
+                    <i class="ri-home-line ri-lg"></i>
+                    <span class="text-xs">Home</span>
+                </a>
+                <a href="locations.html" class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-primary">
+                    <i class="ri-map-pin-line ri-lg"></i>
+                    <span class="text-xs">Locations</span>
+                </a>
+                <a href="history.html" class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-gray-500">
+                    <i class="ri-history-line ri-lg"></i>
+                    <span class="text-xs">History</span>
+                </a>
+                <a href="settings.html" class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-gray-500">
+                    <i class="ri-settings-line ri-lg"></i>
+                    <span class="text-xs">Settings</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const savedLocationsContainer = document.getElementById('savedLocationsContainer');
+        const locationSearchInput = document.getElementById('locationSearchInput');
+        const locationSearchButton = document.getElementById('locationSearchButton');
+        const addLocationButton = document.getElementById('addLocationButton');
+
+        // Load saved locations from localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSavedLocations();
+
+            // Event listeners
+            locationSearchButton.addEventListener('click', handleLocationSearch);
+            addLocationButton.addEventListener('click', addCurrentLocation);
+        });
+
+        // Load saved locations
+        function loadSavedLocations() {
+            const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+            savedLocationsContainer.innerHTML = '';
+
+            if (savedLocations.length === 0) {
+                savedLocationsContainer.innerHTML = '<p class="text-gray-500 text-center">No saved locations yet.</p>';
+                return;
+            }
+
+            savedLocations.forEach(location => {
+                const locationCard = document.createElement('div');
+                locationCard.className = 'bg-white rounded-lg shadow-md p-4 flex justify-between items-center';
+                locationCard.innerHTML = `
+                    <div>
+                        <h4 class="text-lg font-semibold">${location.name}</h4>
+                        <p class="text-sm text-gray-500">${location.country}</p>
+                    </div>
+                    <button onclick="removeLocation('${location.name}')" class="text-red-500 hover:text-red-700">
+                        <i class="ri-delete-bin-line ri-lg"></i>
+                    </button>
+                `;
+                savedLocationsContainer.appendChild(locationCard);
+            });
+        }
+
+        // Handle location search
+        function handleLocationSearch() {
+            const query = locationSearchInput.value.trim();
+            if (!query) {
+                alert('Please enter a location to search.');
+                return;
+            }
+
+            // Simulate a search (replace with actual API call if needed)
+            alert(`Searching for "${query}"...`);
+        }
+
+        // Add current location
+        function addCurrentLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+
+                        // Simulate adding location (replace with actual API call if needed)
+                        const newLocation = { name: `Lat: ${lat}, Lon: ${lon}`, country: 'Current Location' };
+                        saveLocation(newLocation);
+                    },
+                    (error) => {
+                        alert('Unable to retrieve your location.');
+                        console.error(error);
+                    }
+                );
+            } else {
+                alert('Geolocation is not supported by your browser.');
+            }
+        }
+
+        // Save location to localStorage
+        function saveLocation(location) {
+            const savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+            savedLocations.push(location);
+            localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+            loadSavedLocations();
+        }
+
+        // Remove location
+        function removeLocation(locationName) {
+            let savedLocations = JSON.parse(localStorage.getItem('savedLocations')) || [];
+            savedLocations = savedLocations.filter(location => location.name !== locationName);
+            localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
+            loadSavedLocations();
+        }
+
+        // Go back to the previous page
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Weather App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#4361ee',secondary:'#3f37c9'},borderRadius:{'button':'8px'}}}}</script>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+    <div class="max-w-[375px] md:max-w-[768px] lg:max-w-[1024px] xl:max-w-[2280px] mx-auto relative min-h-screen">
+        <!-- Nav Bar -->
+        <nav class="fixed top-0 w-full bg-primary text-white shadow-md z-10">
+            <div class="flex items-center justify-between px-4 py-3 md:px-6 lg:px-8">
+                <h1 class="text-xl md:text-2xl lg:text-3xl font-['Pacifico']">Settings</h1>
+                <button onclick="goBack()" class="text-white text-sm md:text-base flex items-center space-x-1">
+                    <i class="ri-arrow-left-line ri-lg"></i>
+                    <span>Back</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="pt-16 pb-20 px-4 md:px-6 lg:px-8">
+            <!-- Temperature Unit -->
+            <div class="mb-6">
+                <h3 class="text-lg md:text-xl font-semibold mb-3">Temperature Unit</h3>
+                <div class="flex items-center justify-between bg-white rounded-lg shadow-md p-4">
+                    <p class="text-sm md:text-base">Choose your preferred unit</p>
+                    <button id="unitToggle" class="px-4 py-2 bg-primary text-white rounded-lg shadow-md hover:bg-primary/90">
+                        °C
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dark Mode -->
+            <div class="mb-6">
+                <h3 class="text-lg md:text-xl font-semibold mb-3">Dark Mode</h3>
+                <div class="flex items-center justify-between bg-white rounded-lg shadow-md p-4">
+                    <p class="text-sm md:text-base">Enable or disable dark mode</p>
+                    <button id="darkModeToggle" class="px-4 py-2 bg-gray-800 text-white rounded-lg shadow-md hover:bg-gray-700">
+                        <i class="ri-moon-line ri-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Reset Data -->
+            <div class="mb-6">
+                <h3 class="text-lg md:text-xl font-semibold mb-3">Reset Data</h3>
+                <div class="flex items-center justify-between bg-white rounded-lg shadow-md p-4">
+                    <p class="text-sm md:text-base">Clear all saved data</p>
+                    <button id="resetDataButton" class="px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Tab Bar -->
+        <div class="fixed bottom-0 w-full bg-white border-t border-gray-200 shadow-lg z-10">
+            <div class="grid grid-cols-4 h-16">
+                <a href="index.html" class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-gray-500">
+                    <i class="ri-home-line ri-lg"></i>
+                    <span class="text-xs">Home</span>
+                </a>
+                <a href="location.html" class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-gray-500">
+                    <i class="ri-map-pin-line ri-lg"></i>
+                    <span class="text-xs">Locations</span>
+                </a>
+                <a href="history.html" class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-gray-500">
+                    <i class="ri-history-line ri-lg"></i>
+                    <span class="text-xs">History</span>
+                </a>
+                <a href="settings.html" class="flex flex-col items-center justify-center space-y-1 cursor-pointer text-primary">
+                    <i class="ri-settings-line ri-lg"></i>
+                    <span class="text-xs">Settings</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const unitToggle = document.getElementById('unitToggle');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const resetDataButton = document.getElementById('resetDataButton');
+
+        // Global variables
+        let currentUnit = localStorage.getItem('unit') || 'metric'; // Default to Celsius
+        let darkMode = localStorage.getItem('darkMode') === 'true'; // Default to light mode
+
+        // Initialize settings
+        document.addEventListener('DOMContentLoaded', () => {
+            updateUnitDisplay();
+            updateTheme();
+
+            // Event listeners
+            unitToggle.addEventListener('click', toggleUnit);
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+            resetDataButton.addEventListener('click', resetData);
+        });
+
+        // Toggle temperature unit
+        function toggleUnit() {
+            currentUnit = currentUnit === 'metric' ? 'imperial' : 'metric';
+            localStorage.setItem('unit', currentUnit);
+            updateUnitDisplay();
+            alert(`Temperature unit changed to ${currentUnit === 'metric' ? 'Celsius' : 'Fahrenheit'}`);
+        }
+
+        // Update unit display
+        function updateUnitDisplay() {
+            unitToggle.textContent = currentUnit === 'metric' ? '°C' : '°F';
+        }
+
+        // Toggle dark mode
+        function toggleDarkMode() {
+            darkMode = !darkMode;
+            localStorage.setItem('darkMode', darkMode.toString());
+            updateTheme();
+            alert(`${darkMode ? 'Dark' : 'Light'} mode enabled`);
+        }
+
+        // Update theme
+        function updateTheme() {
+            const body = document.body;
+            if (darkMode) {
+                body.classList.add('bg-gray-900', 'text-white');
+                body.classList.remove('bg-gray-50', 'text-gray-800');
+                darkModeToggle.innerHTML = '<i class="ri-sun-line ri-lg"></i>';
+            } else {
+                body.classList.remove('bg-gray-900', 'text-white');
+                body.classList.add('bg-gray-50', 'text-gray-800');
+                darkModeToggle.innerHTML = '<i class="ri-moon-line ri-lg"></i>';
+            }
+        }
+
+        // Reset all data
+        function resetData() {
+            if (confirm('Are you sure you want to reset all data? This action cannot be undone.')) {
+                localStorage.clear();
+                alert('All data has been reset.');
+                location.reload();
+            }
+        }
+
+        // Go back to the previous page
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>
+
