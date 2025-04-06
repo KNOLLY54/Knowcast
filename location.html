@@ -85,9 +85,13 @@
         const locationSearchButton = document.getElementById('locationSearchButton');
         const addLocationButton = document.getElementById('addLocationButton');
 
-        // Load saved locations from localStorage
+        // Global variable for dark mode
+        let darkMode = localStorage.getItem('darkMode') === 'true'; // Default to light mode
+
+        // Initialize the page
         document.addEventListener('DOMContentLoaded', () => {
             loadSavedLocations();
+            updateTheme(); // Apply the theme on page load
 
             // Event listeners
             locationSearchButton.addEventListener('click', handleLocationSearch);
@@ -106,11 +110,11 @@
 
             savedLocations.forEach(location => {
                 const locationCard = document.createElement('div');
-                locationCard.className = 'bg-white rounded-lg shadow-md p-4 flex justify-between items-center';
+                locationCard.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex justify-between items-center';
                 locationCard.innerHTML = `
                     <div>
                         <h4 class="text-lg font-semibold">${location.name}</h4>
-                        <p class="text-sm text-gray-500">${location.country}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">${location.country}</p>
                     </div>
                     <button onclick="removeLocation('${location.name}')" class="text-red-500 hover:text-red-700">
                         <i class="ri-delete-bin-line ri-lg"></i>
@@ -168,6 +172,34 @@
             savedLocations = savedLocations.filter(location => location.name !== locationName);
             localStorage.setItem('savedLocations', JSON.stringify(savedLocations));
             loadSavedLocations();
+        }
+
+        // Update the theme
+        function updateTheme() {
+            const body = document.body;
+            if (darkMode) {
+                body.classList.add('bg-gray-900', 'text-white');
+                body.classList.remove('bg-gray-50', 'text-gray-800');
+                document.querySelectorAll('.bg-white').forEach(el => {
+                    el.classList.remove('bg-white');
+                    el.classList.add('bg-gray-800');
+                });
+                document.querySelectorAll('.text-gray-500').forEach(el => {
+                    el.classList.remove('text-gray-500');
+                    el.classList.add('text-gray-400');
+                });
+            } else {
+                body.classList.remove('bg-gray-900', 'text-white');
+                body.classList.add('bg-gray-50', 'text-gray-800');
+                document.querySelectorAll('.bg-gray-800').forEach(el => {
+                    el.classList.remove('bg-gray-800');
+                    el.classList.add('bg-white');
+                });
+                document.querySelectorAll('.text-gray-400').forEach(el => {
+                    el.classList.remove('text-gray-400');
+                    el.classList.add('text-gray-500');
+                });
+            }
         }
 
         // Go back to the previous page

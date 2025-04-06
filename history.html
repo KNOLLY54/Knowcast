@@ -70,9 +70,13 @@
         const historyContainer = document.getElementById('historyContainer');
         const clearHistoryButton = document.getElementById('clearHistoryButton');
 
-        // Load search history from localStorage
+        // Global variable for dark mode
+        let darkMode = localStorage.getItem('darkMode') === 'true'; // Default to light mode
+
+        // Initialize the page
         document.addEventListener('DOMContentLoaded', () => {
             loadSearchHistory();
+            updateTheme(); // Apply the theme on page load
 
             // Event listener for clearing history
             clearHistoryButton.addEventListener('click', clearSearchHistory);
@@ -84,17 +88,17 @@
             historyContainer.innerHTML = '';
 
             if (searchHistory.length === 0) {
-                historyContainer.innerHTML = '<p class="text-gray-500 text-center">No search history available.</p>';
+                historyContainer.innerHTML = '<p class="text-gray-500 dark:text-gray-400 text-center">No search history available.</p>';
                 return;
             }
 
             searchHistory.forEach(entry => {
                 const historyCard = document.createElement('div');
-                historyCard.className = 'bg-white rounded-lg shadow-md p-4 flex justify-between items-center cursor-pointer';
+                historyCard.className = 'bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 flex justify-between items-center cursor-pointer';
                 historyCard.innerHTML = `
                     <div>
                         <h4 class="text-lg font-semibold">${entry.city}</h4>
-                        <p class="text-sm text-gray-500">${entry.date}</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">${entry.date}</p>
                     </div>
                 `;
 
@@ -113,6 +117,34 @@
             if (confirm('Are you sure you want to clear your search history?')) {
                 localStorage.removeItem('searchHistory');
                 loadSearchHistory();
+            }
+        }
+
+        // Update the theme
+        function updateTheme() {
+            const body = document.body;
+            if (darkMode) {
+                body.classList.add('bg-gray-900', 'text-white');
+                body.classList.remove('bg-gray-50', 'text-gray-800');
+                document.querySelectorAll('.bg-white').forEach(el => {
+                    el.classList.remove('bg-white');
+                    el.classList.add('bg-gray-800');
+                });
+                document.querySelectorAll('.text-gray-500').forEach(el => {
+                    el.classList.remove('text-gray-500');
+                    el.classList.add('text-gray-400');
+                });
+            } else {
+                body.classList.remove('bg-gray-900', 'text-white');
+                body.classList.add('bg-gray-50', 'text-gray-800');
+                document.querySelectorAll('.bg-gray-800').forEach(el => {
+                    el.classList.remove('bg-gray-800');
+                    el.classList.add('bg-white');
+                });
+                document.querySelectorAll('.text-gray-400').forEach(el => {
+                    el.classList.remove('text-gray-400');
+                    el.classList.add('text-gray-500');
+                });
             }
         }
 

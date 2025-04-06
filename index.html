@@ -201,9 +201,15 @@
                 <h3 class="text-xl font-semibold mb-2">Welcome to Weather App</h3>
                 <p class="text-gray-600 mb-4">Search for a city or use your current location to get the latest weather information</p>
                 <div class="flex justify-center space-x-4">
-                    <button id="exampleCity1" class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer">London</button>
-                    <button id="exampleCity2" class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer">New York</button>
-                    <button id="exampleCity3" class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer">Tokyo</button>
+                    <button id="exampleCity1" class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer dark:bg-gray-400">
+                        <span class="dark:text-black">London</span>
+                    </button>
+                    <button id="exampleCity2" class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer dark:bg-gray-400">
+                        <span class="dark:text-black">New York</span>
+                    </button>
+                    <button id="exampleCity3" class="px-3 py-1 bg-gray-100 rounded-full text-sm hover:bg-gray-200 cursor-pointer dark:bg-gray-400">
+                        <span class="dark:text-black">Tokyo</span>
+                    </button>
                 </div>
             </div>
         </main>
@@ -355,6 +361,8 @@
                     (position) => {
                         const lat = position.coords.latitude;
                         const lon = position.coords.longitude;
+
+                        // Fetch weather data by coordinates
                         fetchWeatherByCoords(lat, lon);
                     },
                     (error) => {
@@ -415,11 +423,14 @@
                 })
                 .then(data => {
                     updateCurrentWeather(data);
-                    
+
                     // Save city to localStorage
                     localStorage.setItem('lastCity', data.name);
                     searchInput.value = data.name;
-                    
+
+                    // Save the location to search history
+                    saveSearchHistory(data.name);
+
                     // Fetch 5-day forecast
                     return fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=${currentUnit}`);
                 })
